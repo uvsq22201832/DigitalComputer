@@ -1,60 +1,41 @@
 package testbench;
 
 import bench.IBenchmark;
-import bench.DummyBenchmark;
+import bench.cpu.CPUDigitsOfPi;
+import logging.ConsoleLogger;
+import logging.ILogger;
 import timing.ITimer;
 import timing.Timer;
-import logging.ILogger;
-import logging.ConsoleLogger;
-import logging.TimeUnitConverter;
 
 public class TestBenchmark {
     public static void main(String[] args) {
         ITimer timer = new Timer();
         ILogger log = new ConsoleLogger();
-        IBenchmark bench = new DummyBenchmark();
+        IBenchmark bench = new CPUDigitsOfPi();
 
-        // Test with different time units
-        testWithTimeUnit(timer, log, bench, TimeUnitConverter.TimeUnit.NANOSECONDS);
-        testWithTimeUnit(timer, log, bench, TimeUnitConverter.TimeUnit.MICROSECONDS);
-        testWithTimeUnit(timer, log, bench, TimeUnitConverter.TimeUnit.MILLISECONDS);
-        testWithTimeUnit(timer, log, bench, TimeUnitConverter.TimeUnit.SECONDS);
+        // Test different digit counts
+        int[] digitCounts = {50, 100, 500, 1000, 5000, 10000, 50000, 100000};
 
-        // Test pause-resume sequence
-        testPauseResumeSequence(timer, log);
-    }
+        log.write("Starting Pi benchmark tests");
+        log.write("-------------------------");
 
-    private static void testWithTimeUnit(ITimer timer, ILogger log, IBenchmark bench,
-                                         TimeUnitConverter.TimeUnit unit) {
-        ((ConsoleLogger)log).setTimeUnit(unit);
-        log.write("Testing with time unit: " + unit.name());
+        for (int digits : digitCounts) {
+            // Initialize benchmark with digit count
+            bench.initialize(digits);
 
-        timer.start();
-        bench.run();
-        long time = timer.stop();
+            // Warm up
+            bench.warmUp();
 
-        log.write("Elapsed time: ", time);
-        log.write("----------------------");
-    }
+            // Run benchmark
+            timer.start();
+            bench.run(0); // Using Gauss-Legendre algorithm
+            long time = timer.stop();
 
-    private static void testPauseResumeSequence(ITimer timer, ILogger log) {
-        ((ConsoleLogger)log).setTimeUnit(TimeUnitConverter.TimeUnit.MILLISECONDS);
-        log.write("Testing pause-resume sequence");
-
-        timer.start();
-        try {
-            Thread.sleep(100);
-            long pausedTime = timer.pause();
-            log.write("Paused after: ", pausedTime);
-
-            Thread.sleep(200); // This shouldn't count
-            timer.resume();
-            Thread.sleep(100);
-
-            long totalTime = timer.stop();
-            log.write("Total time: ", totalTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            // Output results
+            log.write("Digits:", digits, "Time:", time, "ns");
+            log.write("-------------------------");
         }
+
+        bench.clean();
     }
 }

@@ -10,6 +10,11 @@ public class DummyBenchmark implements IBenchmark {
     }
 
     @Override
+    public void warmUp() {
+
+    }
+
+    @Override
     public void run() {
         running = true;
         // Bubble sort on random array
@@ -38,6 +43,11 @@ public class DummyBenchmark implements IBenchmark {
     @Override
     public void cancel() {
         running = false;
+    }
+
+    @Override
+    public String getResult() {
+        return "";
     }
 
     @Override
