@@ -5,9 +5,12 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-import static java.math.BigDecimal.TWO;
-
 public class CPUDigitsOfPi implements IBenchmark {
+    // Constantes BigDecimal
+    private static final BigDecimal TWO = new BigDecimal("2");
+    private static final BigDecimal FOUR = new BigDecimal("4");
+    private static final BigDecimal ONE = BigDecimal.ONE;
+
     private int digits;
     private BigDecimal pi;
     private boolean running = true;
@@ -20,9 +23,7 @@ public class CPUDigitsOfPi implements IBenchmark {
     @Override
     public void warmUp() {
         // Compute a smaller number of digits for warm-up
-        System.out.println("Warming up...");
-        computePi(1000); // Warm up with 1000 digits
-        System.out.println("Warmup completed");
+        computePi(1000);
     }
 
     @Override
@@ -65,20 +66,18 @@ public class CPUDigitsOfPi implements IBenchmark {
     // Gauss-Legendre algorithm implementation
     private void computePi(int digits) {
         MathContext mc = new MathContext(digits + 2, RoundingMode.HALF_UP);
-        final BigDecimal TWO = BigDecimal.valueOf(2);
-        final BigDecimal FOUR = BigDecimal.valueOf(4);
 
-        BigDecimal a = BigDecimal.ONE;
-        BigDecimal b = BigDecimal.ONE.divide(sqrt(TWO, mc), mc);
-        BigDecimal t = BigDecimal.valueOf(0.25);
-        BigDecimal x = BigDecimal.ONE;
+        BigDecimal a = ONE;
+        BigDecimal b = ONE.divide(sqrt(TWO, mc), mc);
+        BigDecimal t = new BigDecimal("0.25");
+        BigDecimal x = ONE;
         BigDecimal y;
 
         while (!a.equals(b)) {
             y = a;
             a = a.add(b).divide(TWO, mc);
             b = sqrt(b.multiply(y), mc);
-            t = t.subtract(x.multiply(y.subtract(a).multiply(y.subtract(a)), mc));
+            t = t.subtract(x.multiply(y.subtract(a).multiply(y.subtract(a))), mc);
             x = x.multiply(TWO);
         }
 
@@ -90,28 +89,26 @@ public class CPUDigitsOfPi implements IBenchmark {
     private void computePiBBP(int digits) {
         MathContext mc = new MathContext(digits + 2, RoundingMode.HALF_UP);
         BigDecimal pi = BigDecimal.ZERO;
-        final BigDecimal SIXTEEN = BigDecimal.valueOf(16);
+        BigDecimal sixteen = new BigDecimal("16");
 
-        for (int k = 0; k < digits; k++) {
-            BigDecimal term = BigDecimal.ONE.divide(
-                            BigDecimal.valueOf(16).pow(k, mc), mc)
+        for (int k = 0; k < digits && running; k++) {
+            BigDecimal term = ONE.divide(
+                            sixteen.pow(k, mc), mc)
                     .multiply(
-                            BigDecimal.valueOf(4).divide(
-                                            BigDecimal.valueOf(8 * k + 1), mc)
+                            new BigDecimal("4").divide(
+                                            new BigDecimal(8 * k + 1), mc)
                                     .subtract(
-                                            BigDecimal.valueOf(2).divide(
-                                                            BigDecimal.valueOf(8 * k + 4), mc)
+                                            TWO.divide(
+                                                            new BigDecimal(8 * k + 4), mc)
                                                     .subtract(
-                                                            BigDecimal.valueOf(1).divide(
-                                                                            BigDecimal.valueOf(8 * k + 5), mc)
+                                                            ONE.divide(
+                                                                            new BigDecimal(8 * k + 5), mc)
                                                                     .subtract(
-                                                                            BigDecimal.valueOf(1).divide(
-                                                                                    BigDecimal.valueOf(8 * k + 6), mc)
+                                                                            ONE.divide(
+                                                                                    new BigDecimal(8 * k + 6), mc)
                                                                     ))));
 
             pi = pi.add(term, mc);
-
-            if (!running) return;
         }
 
         this.pi = pi.setScale(digits, RoundingMode.DOWN);
